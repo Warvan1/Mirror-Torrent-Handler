@@ -5,20 +5,24 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Vector;
 
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
+import org.jsoup.helper.ValidationException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.jsoup.UnsupportedMimeTypeException;
 
 public class ScrapeTorrents {
     
     private static final int BUFFER_SIZE = 4096;
 
     //use jsoup to get the list of links from a given webpage
-    public static Vector<String> getLinks(String url) throws IOException{
+    public static Vector<String> scrapeLinks(String url, String filterSuffix) throws IOException{
         Vector<String> link_vec = new Vector<>();
 
         //get the html from the page
@@ -28,7 +32,7 @@ public class ScrapeTorrents {
         for (Element link : links){
             //get the href url for each link and add it to the output vector if it ends in .torrent
             String l = link.attr("abs:href");
-            if(l.substring(l.length() - 8).equals(".torrent")){
+            if(filterSuffix.equals("") || (l.length() > filterSuffix.length() && l.substring(l.length() - filterSuffix.length()).equals(filterSuffix))){
                 link_vec.add(l);
             }
         }
@@ -38,12 +42,6 @@ public class ScrapeTorrents {
 
     //download files from a vector of urls into a given file location
     public static void downloadFileList(Vector<String> urls, String folder){
-        //create the folder if it doesnt exist
-        File dir = new File(folder);
-        if(!dir.exists()){
-            dir.mkdir();
-        }
-        
         for(String url : urls){
             //get the filename from the url
             String[] split_url = url.split("/");
@@ -51,12 +49,8 @@ public class ScrapeTorrents {
 
             System.out.println(filename);
             try{
-                //check if file already exists
-                File f = new File(folder + "/" + filename);
-                if(!f.exists()){
-                    //download the file using the url, folder and calculated filename
-                    downloadFile(url, folder + "/" + filename);
-                }
+                //download the file using the url, folder and calculated filename
+                downloadFile(url, folder, filename);
             }
             catch(IOException e){
                 e.printStackTrace();
@@ -65,7 +59,19 @@ public class ScrapeTorrents {
     }
     
     //downloads a file from a given url into a given file path and name
-    public static void downloadFile(String url, String fileName) throws IOException{
+    public static void downloadFile(String url, String folder, String filename) throws IOException{
+        //check to make sure that the file doesnt already exist
+        File f = new File(folder + "/" + filename);
+        if(f.exists()){
+            return;
+        }
+
+        //create the folder if it doesnt exist
+        File dir = new File(folder);
+        if(!dir.exists()){
+            dir.mkdir();
+        }
+
         //open a http connection to the given url 
         HttpURLConnection httpConn = (HttpURLConnection) new URL(url).openConnection();
         int responseCode = httpConn.getResponseCode();
@@ -76,7 +82,7 @@ public class ScrapeTorrents {
             InputStream inputStream = httpConn.getInputStream();
 
             //initialize output stream to the file
-            FileOutputStream outputStream = new FileOutputStream(fileName);
+            FileOutputStream outputStream = new FileOutputStream(folder + "/" + filename);
 
             //read the bytes of the file from the http input stream and output them to the file output stream
             int bytesRead = -1;

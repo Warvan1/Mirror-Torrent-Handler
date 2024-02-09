@@ -13,7 +13,7 @@ public class MirrorTorrentApplication {
         // String url = "https://download.documentfoundation.org/libreoffice/stable/"; // depth 5
 
         try{
-            Vector<String> links = ScrapeTorrents.getLinks(url);
+            Vector<String> links = ScrapeTorrents.scrapeLinks(url, ".torrent");
             
             System.out.println(links);
 
