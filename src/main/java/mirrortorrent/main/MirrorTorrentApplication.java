@@ -13,13 +13,14 @@ public class MirrorTorrentApplication {
         // String url = "https://torrents.artixlinux.org/torrents.php";
         String url = "https://download.documentfoundation.org/libreoffice/stable/"; // depth 5
 
-        String[] ignoreArray = {"apache", "mirrorbrain", "mailto", "?C=N;O=D", "?C=M;O=A", "?C=S;O=A", ".tar.gz", ".msi", ".asc", ".dmg", "exact: https://download.documentfoundation.org/libreoffice/", "exact: https://download.documentfoundation.org/libreoffice/stable/"};
+        String[] ignoreArray = {"apache", "mirrorbrain", "mailto", "?C=N;O=D", "?C=M;O=A", "?C=S;O=A", ".tar.gz", ".msi", ".asc", ".dmg"};
         // String[] ignoreArray = {"apache", "mirrorbrain", "mailto"};
         Vector<String> ignoreList = new Vector<String>(Arrays.asList(ignoreArray));
 
         HashSet<String> links = ScrapeTorrents.scrapeLinksDepth(url, ".torrent", ignoreList, 5 );
         
         System.out.println(links);
+        System.out.println(links.size());
 
         // ScrapeTorrents.downloadFileList(links, "torrent");
 

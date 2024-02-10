@@ -80,16 +80,13 @@ public class ScrapeTorrents {
             for (Element link : links){
                 //get the href url for each link and add it to the output vector if the link ends in "filterSuffix"
                 String l = link.attr("abs:href");
-                if(link.text().toLowerCase().equals("Parent Directory")) continue;
+                if(link.text().toLowerCase().equals("parent directory")) continue;
                 if(checkSuffix(l, filterSuffix) && !checkIgnoreList(l, filterSuffix, ignoreList)){
                     link_set.add(l);
                 }
             }
         }
         catch(IOException | ValidationException e){
-            // System.err.println(url);
-            // System.err.println(e);
-            // System.err.println("----------------------");
             return new HashSet<>();
         }
 
@@ -105,14 +102,7 @@ public class ScrapeTorrents {
 
     public static boolean checkIgnoreList(String s, String filterSuffix, Vector<String> ignoreList){
         for(String l : ignoreList){
-            //exact case
-            if(l.startsWith("exact: ")){
-                if(s.equals(l.substring(7))){
-                    return true;
-                }
-            }
-            //normal contains case
-            else if(s.contains(l) && !s.contains(".torrent") && !s.contains(".mirrorlist")){
+            if(s.contains(l) && !s.contains(".torrent") && !s.contains(".mirrorlist")){
                 return true;
             }
         }
