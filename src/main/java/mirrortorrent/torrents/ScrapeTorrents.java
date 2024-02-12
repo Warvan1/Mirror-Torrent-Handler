@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashSet;
-import java.util.Vector;
 
 import org.jsoup.Jsoup;
 import org.jsoup.helper.ValidationException;
@@ -19,57 +18,8 @@ public class ScrapeTorrents {
     
     private static final int BUFFER_SIZE = 4096;
 
-    public static HashSet<String> scrapeLinksDepth(String url, String filterSuffix, Vector<String> ignoreList, int depth){
-        //if depth is 1 return the output for the url from scrapeLinks
-        if(depth == 1){
-            return scrapeLinks(url, filterSuffix, ignoreList);
-        }
-
-        //if depth is NOT 1 we have to search all pages until given depth
-        HashSet<String> outputLinks = new HashSet<>();
-        HashSet<String> currientLinks = new HashSet<>();
-        currientLinks.add(url);
-
-        for(int i = depth; i >= 1; i--){
-            //base case where depth is 1
-            if(i == 1){
-                //retrieve all filtered links on each page and add them to outputLinks
-                for(String link : currientLinks){
-                    outputLinks.addAll(scrapeLinks(link, filterSuffix, ignoreList));
-                }
-            }
-            else{
-                //retrieve all links on each page and add them to new Links vector
-                HashSet<String> newLinks = new HashSet<>();
-                for(String link : currientLinks){
-                    newLinks.addAll(scrapeLinks(link, "", ignoreList));
-                }
-                //add to outputlinks any links from newLinks that end in filterSuffix
-                for(String l : newLinks){
-                    if(checkSuffix(l, filterSuffix)){
-                        outputLinks.add(l);
-                    }
-                }
-                //replace currientLinks with newLinks
-                currientLinks = newLinks;
-            }
-            System.out.println(currientLinks);
-            System.out.println(currientLinks.size());
-            System.out.println("--------------");
-            System.out.println(outputLinks);
-            System.out.println(outputLinks.size());
-            System.out.println("--------------");
-            System.out.println(i);
-            System.out.println("--------------");
-            System.out.println("--------------");
-
-        }
-
-        return outputLinks;
-    }
-
     //use jsoup to get the list of links from a given webpage
-    public static HashSet<String> scrapeLinks(String url, String filterSuffix, Vector<String> ignoreList){
+    public static HashSet<String> scrapeLinks(String url, String filterSuffix){
         HashSet<String> link_set = new HashSet<>();
 
         try{
@@ -81,7 +31,7 @@ public class ScrapeTorrents {
                 //get the href url for each link and add it to the output vector if the link ends in "filterSuffix"
                 String l = link.attr("abs:href");
                 if(link.text().toLowerCase().equals("parent directory")) continue;
-                if(checkSuffix(l, filterSuffix) && !checkIgnoreList(l, filterSuffix, ignoreList)){
+                if(filterSuffix.equals("") || (l.length() > filterSuffix.length() && l.substring(l.length() - filterSuffix.length()).equals(filterSuffix))){
                     link_set.add(l);
                 }
             }
@@ -93,24 +43,60 @@ public class ScrapeTorrents {
         return link_set;
     }
 
-    public static boolean checkSuffix(String s, String filterSuffix){
-        if(filterSuffix.equals("") || (s.length() > filterSuffix.length() && s.substring(s.length() - filterSuffix.length()).equals(filterSuffix))){
-            return true;
-        }
-        return false;
-    }
+    public static HashSet<String> scrapeLibreOfficeTorrentLinks(String url, int depth){
+        String[] ignoreArray = {"apache", "mirrorbrain", "mailto", "?C=N;O=D", "?C=M;O=A", "?C=S;O=A", ".tar.gz", ".msi", ".asc", ".dmg"};
 
-    public static boolean checkIgnoreList(String s, String filterSuffix, Vector<String> ignoreList){
-        for(String l : ignoreList){
-            if(s.contains(l) && !s.contains(".torrent") && !s.contains(".mirrorlist")){
-                return true;
+        HashSet<String> mirrorLinks = new HashSet<>();
+        HashSet<String> currientLinks = new HashSet<>();
+        HashSet<String> torrentLinks = new HashSet<>();
+        currientLinks.add(url);
+
+        for(int i = depth - 1; i >= 1; i--){
+            if(i == 1){
+                for(String link : currientLinks){
+                    mirrorLinks.addAll(scrapeLinks(link, ".mirrorlist"));
+                }
+            }
+            else{
+                //retrieve all links on each page and add them to new Links vector
+                HashSet<String> newLinks = new HashSet<>();
+                for(String link : currientLinks){
+                    newLinks.addAll(filterIgnoreList(scrapeLinks(link, ""), ignoreArray));
+                }
+                //replace currientLinks with newLinks
+                currientLinks = newLinks;
             }
         }
-        return false;
+
+        //replace the .mirrorlist ending with .torrent
+        for(String s : mirrorLinks){
+            s = s.substring(0, s.length() - 11) + ".torrent";
+            torrentLinks.add(s);
+        }
+
+        return torrentLinks;
+    }
+
+    public static HashSet<String> filterIgnoreList(HashSet<String> inputset, String[] ignoreArray){
+        HashSet<String> outputset = new HashSet<>();
+        for(String link : inputset){
+            boolean flag = false;
+            for(String s : ignoreArray){
+                if(link.contains(s)){
+                    flag = true;
+                    break;
+                }
+            }
+            if(!flag){
+                outputset.add(link);
+            }
+        }
+
+        return outputset;
     }
 
     //download files from a vector of urls into a given file location
-    public static void downloadFileList(Vector<String> urls, String folder){
+    public static void downloadFileList(HashSet<String> urls, String folder){
         for(String url : urls){
             //get the filename from the url
             String[] split_url = url.split("/");
