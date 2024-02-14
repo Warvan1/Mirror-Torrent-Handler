@@ -14,12 +14,49 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class ScrapeTorrents {
+import org.lavajuno.lucidjson.JsonArray;
+import org.lavajuno.lucidjson.JsonObject;
+import org.lavajuno.lucidjson.JsonString;
+
+public class ScrapeTorrents implements Runnable{
     
     private static final int BUFFER_SIZE = 4096;
 
+    private JsonArray torrentArray;
+
+    public ScrapeTorrents(JsonArray a){
+        this.torrentArray = a;
+    }
+
+    public void run(){
+
+        File dir = new File("torrent");
+        if(!dir.exists()){
+            dir.mkdir();
+        }
+
+        for(int i = 0; i < torrentArray.size(); i++){
+            JsonObject o = (JsonObject) torrentArray.get(i);
+            String projectUrl = ((JsonString) o.get("url")).getValue();
+            String[] projectUrlArray = projectUrl.split("/")[2].split("\\.");
+            String projectName = projectUrlArray[projectUrlArray.length - 2];
+
+            System.out.println(projectUrl);
+            System.out.println(projectName);
+
+            if(projectName != "documentfoundation"){
+                HashSet<String> links = scrapeLinks(projectUrl, ".torrent");
+                downloadFileList(links, "torrent/" + projectName);
+            }
+            else{
+                HashSet<String> links = scrapeLibreOfficeTorrentLinks(projectUrl, 5);
+                downloadFileList(links, "torrent/LibreOffice");
+            }
+        }
+    }
+
     //use jsoup to get the list of links from a given webpage
-    public static HashSet<String> scrapeLinks(String url, String filterSuffix){
+    public HashSet<String> scrapeLinks(String url, String filterSuffix){
         HashSet<String> link_set = new HashSet<>();
 
         try{
@@ -43,7 +80,7 @@ public class ScrapeTorrents {
         return link_set;
     }
 
-    public static HashSet<String> scrapeLibreOfficeTorrentLinks(String url, int depth){
+    public HashSet<String> scrapeLibreOfficeTorrentLinks(String url, int depth){
         String[] ignoreArray = {"apache", "mirrorbrain", "mailto", "?C=N;O=D", "?C=M;O=A", "?C=S;O=A", ".tar.gz", ".msi", ".asc", ".dmg"};
 
         HashSet<String> mirrorLinks = new HashSet<>();
@@ -77,7 +114,7 @@ public class ScrapeTorrents {
         return torrentLinks;
     }
 
-    public static HashSet<String> filterIgnoreList(HashSet<String> inputset, String[] ignoreArray){
+    public HashSet<String> filterIgnoreList(HashSet<String> inputset, String[] ignoreArray){
         HashSet<String> outputset = new HashSet<>();
         for(String link : inputset){
             boolean flag = false;
@@ -96,7 +133,7 @@ public class ScrapeTorrents {
     }
 
     //download files from a vector of urls into a given file location
-    public static void downloadFileList(HashSet<String> urls, String folder){
+    public void downloadFileList(HashSet<String> urls, String folder){
         for(String url : urls){
             //get the filename from the url
             String[] split_url = url.split("/");
@@ -114,7 +151,7 @@ public class ScrapeTorrents {
     }
     
     //downloads a file from a given url into a given file path and name
-    public static void downloadFile(String url, String folder, String filename) throws IOException{
+    public void downloadFile(String url, String folder, String filename) throws IOException{
         //check to make sure that the file doesnt already exist
         File f = new File(folder + "/" + filename);
         if(f.exists()){
