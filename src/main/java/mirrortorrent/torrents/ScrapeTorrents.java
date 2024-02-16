@@ -44,13 +44,13 @@ public class ScrapeTorrents implements Runnable{
             System.out.println(projectUrl);
             System.out.println(projectName);
 
-            if(projectName != "documentfoundation"){
+            if(!projectName.equals("documentfoundation")){
                 HashSet<String> links = scrapeLinks(projectUrl, ".torrent");
                 downloadFileList(links, "torrent/" + projectName);
             }
             else{
                 HashSet<String> links = scrapeLibreOfficeTorrentLinks(projectUrl, 5);
-                downloadFileList(links, "torrent/LibreOffice");
+                downloadFileList(links, "torrent/libreoffice");
             }
         }
     }
