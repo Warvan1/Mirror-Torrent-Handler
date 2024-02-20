@@ -18,9 +18,15 @@ import org.lavajuno.lucidjson.JsonArray;
 import org.lavajuno.lucidjson.JsonObject;
 import org.lavajuno.lucidjson.JsonString;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
 public class ScrapeTorrents implements Runnable{
     
     private static final int BUFFER_SIZE = 4096;
+
+    //read torrent folder path from .env file
+    private Dotenv dotenv = Dotenv.load();
+    private String torrentFolder = dotenv.get("TorrentFolder");
 
     private JsonArray torrentArray;
 
@@ -30,7 +36,7 @@ public class ScrapeTorrents implements Runnable{
 
     public void run(){
 
-        File dir = new File("torrent");
+        File dir = new File(torrentFolder);
         if(!dir.exists()){
             dir.mkdir();
         }
@@ -46,11 +52,11 @@ public class ScrapeTorrents implements Runnable{
 
             if(!projectName.equals("documentfoundation")){
                 HashSet<String> links = scrapeLinks(projectUrl, ".torrent");
-                downloadFileList(links, "torrent/" + projectName);
+                downloadFileList(links, torrentFolder + "/" + projectName);
             }
             else{
                 HashSet<String> links = scrapeLibreOfficeTorrentLinks(projectUrl, 5);
-                downloadFileList(links, "torrent/libreoffice");
+                downloadFileList(links, torrentFolder + "/libreoffice");
             }
         }
     }

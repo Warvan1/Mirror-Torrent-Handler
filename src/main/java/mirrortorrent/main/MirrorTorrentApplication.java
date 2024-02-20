@@ -17,6 +17,9 @@ public class MirrorTorrentApplication {
 
             Thread torrentScrapeThread = new Thread( new ScrapeTorrents((JsonArray) config.get("torrents")));
             torrentScrapeThread.start();
+
+            Thread syncTorrentsThread = new Thread( new SyncTorrents((JsonObject) config.get("mirrors")));
+            syncTorrentsThread.start();
             
         }
         catch(FileNotFoundException | ParseException e){
