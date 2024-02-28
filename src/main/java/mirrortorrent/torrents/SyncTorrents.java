@@ -47,7 +47,7 @@ public class SyncTorrents implements Runnable{
         }
         //test the globsearch function
         try{
-            HashSet<String> testSet = GlobSearch("src/main/java/*/*/*.java", "");
+            HashSet<String> testSet = GlobSearch("src/main/java/*/torrents/*.java", "");
             System.out.println(testSet);
         }
         catch(IOException e){
@@ -63,6 +63,8 @@ public class SyncTorrents implements Runnable{
         //create a hashset to collect all the files we find into
         HashSet<String> output = new HashSet<>();
         
+        // System.out.println(String.join("/", globParts));
+        // System.out.println(path + "\n");
         if(globParts.length > 1){
             if(globParts[0].equals("*")){
 
@@ -76,10 +78,10 @@ public class SyncTorrents implements Runnable{
                 File[] dirList = dir.listFiles();
                 for(File f : dirList){
                     if(f.isDirectory()){
-                        output.addAll(GlobSearch(glob , f.toString()));
+                        output.addAll(GlobSearch(glob , f.toString() + "/"));
                     }
                 }
-
+                
             }
             else{
                 //add first element of array to path
@@ -88,6 +90,7 @@ public class SyncTorrents implements Runnable{
                 //check to make sure that the path exists
                 File dir = new File(path);
                 if(!dir.exists()){
+                    System.out.println("error: " + path + " not found");
                     return new HashSet<>();
                 }
 
@@ -97,13 +100,12 @@ public class SyncTorrents implements Runnable{
                 //recursivly call GlobSearch on the cut down array, joined into a string.
                 output.addAll(GlobSearch(String.join("/", globParts), path));
             }
-            // System.out.println(String.join("/", globParts));
-            // System.out.println(path + "\n");
+            
         }
         else{
             //base case
             //create a pathMatcher using the final glob
-            PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:"+ path + "/" + globParts[0]);
+            PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:"+ path + globParts[0]);
             
             //loop over every file in the directory and test if it matches the matcher
             File dir = new File(path);
