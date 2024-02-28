@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import org.lavajuno.lucidjson.JsonObject;
+import org.lavajuno.lucidjson.JsonString;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
@@ -33,7 +34,7 @@ public class SyncTorrents implements Runnable{
                 continue;
             }
 
-            String glob = projectConfig.get("torrents").toString();
+            String glob = ((JsonString) projectConfig.get("torrents")).getValue();
             System.out.println(glob);
 
             //Find all torrent files from the given glob
