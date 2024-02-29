@@ -74,7 +74,7 @@ public class ScrapeTorrents implements Runnable{
                 //get the href url for each link and add it to the output vector if the link ends in "filterSuffix"
                 String l = link.attr("abs:href");
                 if(link.text().toLowerCase().equals("parent directory")) continue;
-                if(filterSuffix.equals("") || (l.length() > filterSuffix.length() && l.substring(l.length() - filterSuffix.length()).equals(filterSuffix))){
+                if(filterSuffix.equals("") || l.endsWith(filterSuffix)){
                     link_set.add(l);
                 }
             }

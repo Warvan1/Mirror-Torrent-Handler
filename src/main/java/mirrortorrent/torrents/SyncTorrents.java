@@ -2,9 +2,6 @@ package mirrortorrent.torrents;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -39,7 +36,7 @@ public class SyncTorrents implements Runnable{
 
             //Find all torrent files from the given glob
             try{
-                System.out.println(GlobSearch(glob + "*.torrents", ""));
+                System.out.println(GlobSearch(glob, "", ".torrent"));
             }
             catch(IOException e){
                 e.printStackTrace();
@@ -47,7 +44,7 @@ public class SyncTorrents implements Runnable{
         }
         //test the globsearch function
         try{
-            HashSet<String> testSet = GlobSearch("src/main/java/*/torrents/*.java", "");
+            HashSet<String> testSet = GlobSearch("src/main/java/*/torrents/", "", ".java");
             System.out.println(testSet);
         }
         catch(IOException e){
@@ -56,7 +53,7 @@ public class SyncTorrents implements Runnable{
     }
 
     //given a glob string find all the files that match that string
-    public HashSet<String> GlobSearch(String glob, String path) throws IOException{
+    public HashSet<String> GlobSearch(String glob, String path, String suffix) throws IOException{
         
         //create an array containing each part of the glob string
         String[] globParts = glob.split("/");
@@ -65,7 +62,7 @@ public class SyncTorrents implements Runnable{
         
         // System.out.println(String.join("/", globParts));
         // System.out.println(path + "\n");
-        if(globParts.length > 1){
+        if(!glob.equals("")){
             if(globParts[0].equals("*")){
 
                 //remove the first element from the globParts array
@@ -78,7 +75,7 @@ public class SyncTorrents implements Runnable{
                 File[] dirList = dir.listFiles();
                 for(File f : dirList){
                     if(f.isDirectory()){
-                        output.addAll(GlobSearch(glob , f.toString() + "/"));
+                        output.addAll(GlobSearch(glob , f.toString() + "/", suffix));
                     }
                 }
                 
@@ -98,20 +95,17 @@ public class SyncTorrents implements Runnable{
                 globParts = Arrays.copyOfRange(globParts, 1, globParts.length);
  
                 //recursivly call GlobSearch on the cut down array, joined into a string.
-                output.addAll(GlobSearch(String.join("/", globParts), path));
+                output.addAll(GlobSearch(String.join("/", globParts), path, suffix));
             }
             
         }
         else{
             //base case
-            //create a pathMatcher using the final glob
-            PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:"+ path + globParts[0]);
-            
-            //loop over every file in the directory and test if it matches the matcher
+            //loop over every file in the directory and test if it ends in the suffix
             File dir = new File(path);
             File[] fileList = dir.listFiles();
             for(File f : fileList){
-                if(f.isFile() && matcher.matches(Path.of(f.toString()))){
+                if(f.isFile() && f.toString().endsWith(suffix)){
                     output.add(f.toString());
                 }
             }
