@@ -2,24 +2,23 @@ package mirrortorrent.torrents;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 
 import org.lavajuno.lucidjson.JsonObject;
 import org.lavajuno.lucidjson.JsonString;
 
-import io.github.cdimascio.dotenv.Dotenv;
-
 public class SyncTorrents implements Runnable{
 
-    //read torrent folder path from .env file
-    private Dotenv dotenv = Dotenv.load();
-    private String torrentFolder = dotenv.get("TorrentFolder");
-
     private JsonObject mirrorConfig;
+    private String torrentFolder;
 
-    public SyncTorrents(JsonObject a){
+    public SyncTorrents(JsonObject a, String s){
         this.mirrorConfig = a;
+        this.torrentFolder = s;
     }
 
     public void run(){
@@ -32,23 +31,30 @@ public class SyncTorrents implements Runnable{
             }
 
             String glob = ((JsonString) projectConfig.get("torrents")).getValue();
+            HashSet<String> torrentFiles = new HashSet<>();
             System.out.println(glob);
 
-            //Find all torrent files from the given glob
             try{
-                System.out.println(GlobSearch(glob, "", ".torrent"));
+                //Find all torrent files from the given glob
+                torrentFiles.addAll(GlobSearch(glob, "", ".torrent"));
+
+                //create folder for the project if it doesnt exist
+                File dir = new File(torrentFolder + "/" + name);
+                if(!dir.exists()){
+                    dir.mkdir();
+                }
+
+                //Create a hard link for each torrent file
+                for(String f : torrentFiles){
+                    String[] flist = f.split("/");
+                    Path oldFile = Paths.get(f);
+                    Path newFile = Paths.get(torrentFolder + "/" + name + "/" + flist[flist.length-1]);
+                    Files.createLink(newFile, oldFile);
+                }
             }
             catch(IOException e){
                 e.printStackTrace();
             }
-        }
-        //test the globsearch function
-        try{
-            HashSet<String> testSet = GlobSearch("src/main/java/*/torrents/", "", ".java");
-            System.out.println(testSet);
-        }
-        catch(IOException e){
-            e.printStackTrace();
         }
     }
 
@@ -60,8 +66,6 @@ public class SyncTorrents implements Runnable{
         //create a hashset to collect all the files we find into
         HashSet<String> output = new HashSet<>();
         
-        // System.out.println(String.join("/", globParts));
-        // System.out.println(path + "\n");
         if(!glob.equals("")){
             if(globParts[0].equals("*")){
 

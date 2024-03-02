@@ -18,28 +18,20 @@ import org.lavajuno.lucidjson.JsonArray;
 import org.lavajuno.lucidjson.JsonObject;
 import org.lavajuno.lucidjson.JsonString;
 
-import io.github.cdimascio.dotenv.Dotenv;
 
 public class ScrapeTorrents implements Runnable{
     
     private static final int BUFFER_SIZE = 4096;
 
-    //read torrent folder path from .env file
-    private Dotenv dotenv = Dotenv.load();
-    private String torrentFolder = dotenv.get("TorrentFolder");
-
     private JsonArray torrentArray;
+    private String torrentFolder;
 
-    public ScrapeTorrents(JsonArray a){
+    public ScrapeTorrents(JsonArray a, String s){
         this.torrentArray = a;
+        this.torrentFolder = s;
     }
 
     public void run(){
-
-        File dir = new File(torrentFolder);
-        if(!dir.exists()){
-            dir.mkdir();
-        }
 
         for(int i = 0; i < torrentArray.size(); i++){
             JsonObject o = (JsonObject) torrentArray.get(i);
