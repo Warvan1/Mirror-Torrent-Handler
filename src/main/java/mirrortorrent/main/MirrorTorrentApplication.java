@@ -17,6 +17,7 @@ public class MirrorTorrentApplication {
         //read torrent folder path from .env file
         Dotenv dotenv = Dotenv.load();
         String torrentFolder = dotenv.get("TorrentFolder");
+        String downloadFolder = dotenv.get("DownloadFolder");
 
         //if torrent folder doesnt exist create it
         File dir = new File(torrentFolder);
@@ -31,7 +32,7 @@ public class MirrorTorrentApplication {
             Thread torrentScrapeThread = new Thread( new ScrapeTorrents((JsonArray) config.get("torrents"), torrentFolder));
             torrentScrapeThread.start();
 
-            Thread syncTorrentsThread = new Thread( new SyncTorrents((JsonObject) config.get("mirrors"), torrentFolder));
+            Thread syncTorrentsThread = new Thread( new SyncTorrents((JsonObject) config.get("mirrors"), torrentFolder, downloadFolder));
             syncTorrentsThread.start();
             
         }

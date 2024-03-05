@@ -15,10 +15,12 @@ public class SyncTorrents implements Runnable{
 
     private JsonObject mirrorConfig;
     private String torrentFolder;
+    private String downloadFolder;
 
-    public SyncTorrents(JsonObject a, String s){
+    public SyncTorrents(JsonObject a, String tf, String df){
         this.mirrorConfig = a;
-        this.torrentFolder = s;
+        this.torrentFolder = tf;
+        this.downloadFolder = df;
     }
 
     public void run(){
@@ -47,15 +49,28 @@ public class SyncTorrents implements Runnable{
                 //Create a hard link for each torrent file
                 for(String f : torrentFiles){
                     String[] flist = f.split("/");
-                    Path oldFile = Paths.get(f);
-                    Path newFile = Paths.get(torrentFolder + "/" + name + "/" + flist[flist.length-1]);
-                    Files.createLink(newFile, oldFile);
+                    String newFilePath = torrentFolder + "/" + flist[flist.length-1];
+                    File newFile = new File(newFilePath);
+                    if(newFile.exists()){
+                        continue;
+                    }
+                    Path oldPath = Paths.get(f);
+                    Path newPath = Paths.get(newFilePath);
+                    Files.createLink(newPath, oldPath);
+                    //TODO: add non torrent file to downloads directory if it exists in the same glob
+                    HashSet<String> downloadFiles = new HashSet<>();
+                    downloadFiles.addAll(GlobSearch(glob, "", removeSuffix(flist[flist.length-1], ".torrent")));
+                    System.out.println(downloadFiles);
                 }
             }
             catch(IOException e){
                 e.printStackTrace();
             }
         }
+    }
+
+    public String removeSuffix(String s, String suffix){
+        return s.substring(0,s.length()-suffix.length());
     }
 
     //given a glob string find all the files that match that string
