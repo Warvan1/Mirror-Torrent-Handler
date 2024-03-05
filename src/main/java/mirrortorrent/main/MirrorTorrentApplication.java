@@ -25,6 +25,11 @@ public class MirrorTorrentApplication {
             dir.mkdir();
         }
 
+        File dir2 = new File(downloadFolder);
+        if(!dir2.exists()){
+            dir2.mkdir();
+        }
+
         //load mirrors.json
         try{
             JsonObject config = JsonObject.fromFile("configs/mirrors.json");

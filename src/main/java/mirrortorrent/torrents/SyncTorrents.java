@@ -52,13 +52,13 @@ public class SyncTorrents implements Runnable{
                     Path newPath = Paths.get(newFilePath);
                     Files.createLink(newPath, oldPath);
 
-                    //TODO: add non torrent file to downloads directory if it exists in the same glob
-                    HashSet<String> downloadFiles = new HashSet<>();
-                    String newDownloadFile = removeSuffix(flist[flist.length-1], ".torrent");
-                    downloadFiles.addAll(GlobSearch(glob, "", newDownloadFile));
-                    for(String fd : downloadFiles){
-                        Files.createLink(Paths.get(downloadFiles + "/" + newDownloadFile), Paths.get(fd));
-                    }
+                    //add non torrent file to downloads directory if it exists in the same glob
+                    // HashSet<String> downloadFiles = new HashSet<>();
+                    // String newDownloadFile = removeSuffix(flist[flist.length-1], ".torrent");
+                    // downloadFiles.addAll(GlobSearch(glob, "", newDownloadFile));
+                    // for(String fd : downloadFiles){
+                    //     Files.createLink(Paths.get(downloadFiles + "/" + newDownloadFile), Paths.get(fd));
+                    // }
                 }
             }
             catch(IOException e){
