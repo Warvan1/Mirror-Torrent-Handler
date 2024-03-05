@@ -40,12 +40,6 @@ public class SyncTorrents implements Runnable{
                 //Find all torrent files from the given glob
                 torrentFiles.addAll(GlobSearch(glob, "", ".torrent"));
 
-                //create folder for the project if it doesnt exist
-                File dir = new File(torrentFolder + "/" + name);
-                if(!dir.exists()){
-                    dir.mkdir();
-                }
-
                 //Create a hard link for each torrent file
                 for(String f : torrentFiles){
                     String[] flist = f.split("/");
@@ -57,10 +51,14 @@ public class SyncTorrents implements Runnable{
                     Path oldPath = Paths.get(f);
                     Path newPath = Paths.get(newFilePath);
                     Files.createLink(newPath, oldPath);
+
                     //TODO: add non torrent file to downloads directory if it exists in the same glob
                     HashSet<String> downloadFiles = new HashSet<>();
-                    downloadFiles.addAll(GlobSearch(glob, "", removeSuffix(flist[flist.length-1], ".torrent")));
-                    System.out.println(downloadFiles);
+                    String newDownloadFile = removeSuffix(flist[flist.length-1], ".torrent");
+                    downloadFiles.addAll(GlobSearch(glob, "", newDownloadFile));
+                    for(String fd : downloadFiles){
+                        Files.createLink(Paths.get(downloadFiles + "/" + newDownloadFile), Paths.get(fd));
+                    }
                 }
             }
             catch(IOException e){
