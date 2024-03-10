@@ -32,7 +32,7 @@ public class MirrorTorrentApplication {
 
         //load mirrors.json
         try{
-            JsonObject config = JsonObject.fromFile("configs/mirrors.json");
+            JsonObject config = JsonObject.fromFile("configs/mirrorsTest.json");
 
             Thread torrentScrapeThread = new Thread( new ScrapeTorrents((JsonArray) config.get("torrents"), torrentFolder));
             torrentScrapeThread.start();
