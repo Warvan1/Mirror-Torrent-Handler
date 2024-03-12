@@ -4,3 +4,4 @@ target/*
 .env
 torrent/*
 download/*
+configs/env.json

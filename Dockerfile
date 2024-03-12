@@ -3,6 +3,7 @@ RUN apt update && apt upgrade -y
 RUN apt install -y maven
 WORKDIR /torrent_handler
 COPY ./src ./src
+COPY ./configs ./configs
 COPY ./pom.xml pom.xml
 RUN mvn clean package
 
